@@ -1,0 +1,360 @@
+
+PARSER_BEGIN(FaithPL)
+
+	import java.io.*;
+	import java.util.*;
+
+	class FaithPL{
+
+		private static Scanner input = new Scanner(System.in);
+		private static HashMap<String, Integer> mementos = new HashMap<String, Integer>();
+
+		public static void main(String[] args) throws ParseException, TokenMgrError {
+			if(args.length > 0){
+				try{
+					FaithPL scan = new FaithPL(new FileInputStream(args[0]));
+					Node n = scan.Program();
+					//print(n);
+					execute(n);
+					
+				}
+				catch (FileNotFoundException ex) {
+					System.out.println("File "+args[0]+" not found.");
+				}
+				}else{
+					System.out.println("Must specify source code file name.");
+				}
+			}
+		//}
+
+	public static void execute(Node n){
+                if(n.label.equals("PROGRAM")){
+			for(Node joker : n.child){
+				execute(joker);
+			}
+                }else if(n.label.equals("BLOCK")){
+                        for(Node noir : n.child){
+                                execute(noir);
+                        }
+		}else if(n.label.equals("STMNT")){
+			Node skull = n.child.get(0);
+			execute(skull);
+                }else if(n.label.equals("INSERT")){
+                        Node crow = n.child.get(0);
+                        String varName = ((IDNode)crow).ID;
+                        System.out.println("Insert: ");
+                        int value = input.nextInt();
+                        mementos.put(varName, value);
+		}else if(n.label.equals("WHILE")){
+			Node mona = n.child.get(0);
+			Node morgana = n.child.get(1);
+			while(eval(mona)!=0){
+				execute(morgana);
+			}
+		}else if(n.label.equals("IF")){
+			Node carmen = n.child.get(0);
+			Node panther = n.child.get(1);
+			if(eval(carmen)!=0){
+				execute(panther);
+			}
+		}else if(n.label.equals("ASSIGN")){
+			Node zorro = n.child.get(0);
+			int titania = eval(zorro);
+			String oberon = ((IDNode)zorro).ID;
+			mementos.put(oberon, titania);
+                }else if(n.label.equals("OUTPUT")){
+                        Node queen = n.child.get(0);
+                        int value = eval(queen);
+                        System.out.println(value);
+		}
+        }
+
+        public static int eval(Node n){
+                if(n.label.equals("EXP") || n.label.equals("TERM")){
+			int result = eval(n.child.get(0));
+			for(int i=1; i<n.child.size(); i+=2){
+				String Operator = n.child.get(i).label;
+				if(n.child.get(i).label.equals("PLUS")){
+					result = eval(n.child.get(i+1)) + result;
+				}else if(n.child.get(i).label.equals("MINUS")){
+					result = result - eval(n.child.get(i+1));
+				}else if(n.child.get(i).label.equals("MULTIPLY")){
+					result = eval(n.child.get(i+1)) * result;
+				}else if(n.child.get(i).label.equals("DIVIDE")){
+					result = result / eval(n.child.get(i+1));
+				}
+			}
+			return result;
+		}else if(n.label.equals("REL")){
+			int persona = eval(n.child.get(0));
+			for(int i=1; i<n.child.size(); i+=2){
+				String relOperator = n.child.get(i).label;
+				if(n.child.get(i).label.equals("LESSTHAN") || n.child.get(i).label.equals("LESSEQUAL")){
+					persona=eval(n.child.get(i-1));
+				}else if(n.child.get(i).label.equals("GREATERTHAN") || n.child.get(i).label.equals("GREATEREQUAL")){
+					//persona=eval(n.child.get(i+1));
+					persona=eval(n.child.get(i+1));
+				}else if(n.child.get(i).label.equals("NOTEQUAL")){
+					persona = eval(n.child.get(i-1));
+				}else if(n.child.get(i).label.equals("EQUALTO")){
+					persona = eval(n.child.get(i-1));
+				}
+			}
+			return persona;
+		}else if(n.label.equals("FACTOR")){
+			//int subcon = eval(n.child.get(0));
+			int subcon = ((INTNode)n).INT;
+			return subcon;
+			//for(int i=1; i<n.child.size(); i+=2){
+				
+		}else if(n.label.equals("INT")){
+                        int numName = ((INTNode)n).INT;
+                        return numName;
+		}else if(n.label.equals("ID")){
+			String timePieces = ((IDNode)n).ID;
+			return mementos.get(timePieces);
+			}else{
+				throw new IllegalArgumentException(n.label);
+		}
+        }
+
+
+	//public static void print(Node n){
+		//if(n != null){
+			//System.out.println(n.label + " ");
+			//if(n.child != null){
+				//for(Node c:n.child){
+					//print(c);	
+				//}
+			//}
+		//else{
+			//System.out.println("Node is NULL, please check program.");
+		//}
+	//}
+}
+	PARSER_END(FaithPL)
+
+SKIP : { " " | "\t" | "\n" }
+TOKEN: { <FOR : "for"> }
+TOKEN: { <WHILE: "while"> }
+TOKEN: { <SEMICOLON: ";"> }
+TOKEN: { <IF: "if"> }
+TOKEN: { <ELSE: "else"> }
+TOKEN: { <ELSEIF: "else-if"> }
+TOKEN: { <EQUALS: "=">}
+TOKEN: { <INSERT: "insert"> }
+TOKEN: { <SAY: "say"> }
+TOKEN: { <PLUS: "+"> }
+TOKEN: { <MINUS: "-"> }
+TOKEN: { <MULTIPLY: "*"> }
+TOKEN: { <DIVIDE: "/"> }
+TOKEN: { <MOD: "%"> }
+TOKEN: { <LESSTHAN: "<"> }
+TOKEN: { <GREATERTHAN: ">"> }
+TOKEN: { <LESSEQUAL: "<="> }
+TOKEN: { <GREATEREQUAL: ">="> }
+TOKEN: { <NOTEQUAL: "!="> }
+TOKEN: { <EQUALTO: "=="> }
+TOKEN: { <LEFTCURLY: "{"> }
+TOKEN: { <RIGHTCURLY: "}"> }
+TOKEN: { <LEFTPARENTHESIS: "("> }
+TOKEN: { <RIGHTPARENTHESIS: ")"> }
+TOKEN: { <INT : "0" | ["1"-"9"](["0"-"9"])*> }
+TOKEN: { <ID : (["a"-"z", "A"-"Z"] | ["1"-"9"] | "_")+> }
+
+
+Node Block():
+{
+	Node n;
+	Node child;
+}
+{
+			{ n = new Node("BLOCK"); }
+	(child = Stmnt()	{ n.addChild(child); }
+	| 
+	<LEFTCURLY> 
+	(child = Stmnt() 	{ n.addChild(child); }
+	)*  
+	<RIGHTCURLY>)
+	{ return n; }
+}
+Node Stmnt():
+{
+	Node n;
+	Node child;
+}
+{
+				//{ n = new Node("STMNT"); }
+	(			{ n = new Node("STMNT"); }
+	( child = Loop()	{ n.addChild(child); } 	
+	|
+	child = Cond()		{ n.addChild(child); } 
+	| 
+	child = Assign()	{ n.addChild(child); }
+	|
+	child = Input() 	{ n.addChild(child); }
+	|
+	child = Output()	{ n.addChild(child); }
+	))
+				{ return n; }
+}
+Node Input():
+{
+	Node n;
+	Node child;
+	Token t;
+}
+{
+	<INSERT>	{ n = new Node("INSERT"); } 
+	t = <ID>	{ n.addChild(new IDNode(t.image)); } 
+	<SEMICOLON>
+			{ return n; }
+}
+
+Node Loop():
+{
+	Node n;
+	Node child;
+}
+{
+	<WHILE>		{ n = new Node("WHILE");}
+	<LEFTPARENTHESIS>
+	child = Rel()	{ n.addChild(child); }
+	<RIGHTPARENTHESIS> 
+	child = Block()	{ n.addChild(child); }
+			{ return n; }
+}
+
+Node Cond():
+{
+	Node n;
+	Node child;
+}
+{
+	<IF> 	{ n = new Node("IF"); }
+	<LEFTPARENTHESIS> 
+	child = Rel()	{ n.addChild(child); } 
+	<RIGHTPARENTHESIS> 
+	child = Block() { n.addChild(child); }
+	(<ELSE>		
+	child = Block()	{ n.addChild(child); }
+	)?		{ return n; }
+}
+
+Node Exp():
+{
+	Node n;
+	Node child;
+}
+{
+			{ n = new Node("EXP"); }
+	child = Term() 	{ n.addChild(child); }
+	((<PLUS> 	{ n.addChild(new Node("PLUS")); }
+	| 
+	<MINUS>		{ n.addChild(new Node("MINUS")); }
+	) 
+	child = Term()	{ n.addChild(child); }
+	)*
+			{ return n; }
+}
+
+Node Term():
+{
+	Node n;
+	Node child;
+}
+{
+			{ n = new Node("TERM"); }
+	child = Factor()	{ n.addChild(child); } 
+	((<MULTIPLY> 		{ n.addChild(new Node("MULTIPLY")); }
+	| 
+	<DIVIDE>		{ n.addChild(new Node("DIVIDE")); }
+	) 		
+	child = Factor()	{ n.addChild(child); }
+	)*
+				{ return n; }
+}
+
+Node Rel():
+{
+	Node n;
+	Node child;
+}
+{
+		{ n = new Node("REL"); }
+	child = Exp()	{ n.addChild(child); } 
+	(<LESSTHAN> 	{ n.addChild(new Node("LESSTHAN")); }
+	| 
+	<GREATERTHAN> 	{ n.addChild(new Node("GREATERTHAN")); }
+	| 
+	<LESSEQUAL> 	{ n.addChild(new Node("LESSEQUAL")); }
+	| 
+	<GREATEREQUAL> 	{ n.addChild(new Node("GREATEREQUAL")); }
+	| 
+	<NOTEQUAL> 	{ n.addChild(new Node("NOTEQUAL")); }
+	| 
+	<EQUALTO>	{ n.addChild(new Node("EQUALTO")); }
+	) 	
+	child = Exp()	{ n.addChild(child); }
+			{ return n; }
+}
+
+Node Assign():
+{
+	Node n;
+	Node child;
+	Token t;
+}
+{
+			{ n = new Node("ASSIGN"); }
+	t = <ID> 	{ n.addChild(new IDNode(t.image)); }
+	<EQUALS> 
+	child = Exp() 	{ n.addChild(child); }
+	<SEMICOLON>
+			{ return n; }
+}
+
+Node Factor():
+{
+	Node n;
+	Node child;
+	Token t;
+}
+{			{ n = new Node("FACTOR"); }
+	t = <ID> { return new IDNode(t.image); }
+	| 
+	t = <INT> { return new INTNode(Integer.parseInt(t.image)); }
+	|
+	<LEFTPARENTHESIS> 
+	n = Exp()
+	<RIGHTPARENTHESIS>
+	{ return n; }
+}
+
+Node Output():
+{
+	Node n;
+	Node child;
+}
+{
+	<SAY>	{ n = new Node("OUTPUT"); } 
+	<LEFTPARENTHESIS>
+	child = Exp()	{ n.addChild(child); } 
+	<RIGHTPARENTHESIS> 
+	<SEMICOLON>
+			{ return n; }
+}
+
+Node Program():
+{
+	Node n;
+	Node child;
+}
+{
+		{ n = new Node("PROGRAM"); }
+	(
+	child = Stmnt() { n.addChild(child); }
+	)+
+	<EOF>
+		{ return n; }
+}
